@@ -25,9 +25,10 @@ bin/
 out/
 !**/src/main/**/out/
 !**/src/test/**/out/
-*.yml
+# GitHub Actions 실행에 필요한 deploy.yml 추가를 위해 주석처리
+# *.yml
 *.properties
-*.yaml
+# *.yaml
 
 ### NetBeans ###
 /nbproject/private/
