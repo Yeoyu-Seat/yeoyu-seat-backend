@@ -45,24 +45,28 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 파일 캐스 캐스팅
+      - name:  저장소 Checkout
         uses: actions/checkout@v3
 
-      - name: 연결 키 설정
-        uses: webfactory/ssh-agent@v0.5.4
+      - name:  Gradle 빌드
+        run: ./gradlew build
+
+      - name:  EC2 SSH Key 설정
+        uses: webfactory/ssh-agent@v0.7.0
         with:
           ssh-private-key: ${{ secrets.EC2_KEY }}
 
-      - name: 하드컴으로 JAR, Dockerfile 전송
+      - name:  EC2에 JAR, Dockerfile 전송
         run: |
           scp -o StrictHostKeyChecking=no ./build/libs/*.jar ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/app.jar
           scp -o StrictHostKeyChecking=no ./Dockerfile ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/Dockerfile
 
-      - name: EC2 서버에서 Docker 빌드 + 실행
+      - name:  EC2에서 Docker 빌드 및 실행
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
-            docker stop yeoyu-container || true
-            docker rm yeoyu-container || true
-            docker build -t yeoyu-backend -f Dockerfile .
-            docker run -d -p 8080:8080 --name yeoyu-container yeoyu-backend
+          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            sudo docker stop yeoyu-container || true
+            sudo docker rm yeoyu-container || true
+            sudo docker build -t yeoyu-backend -f Dockerfile .
+            sudo docker run -d -p 8080:8080 --name yeoyu-container yeoyu-backend
           EOF
+
