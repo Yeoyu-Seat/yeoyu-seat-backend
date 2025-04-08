@@ -28,7 +28,7 @@ out/
 !**/src/test/**/out/
 # GitHub Actions 실행에 필요한 deploy.yml 추가를 위해 주석처리
 # *.yml
-*.properties
+# *.properties
 # *.yaml
 
 ### NetBeans ###
