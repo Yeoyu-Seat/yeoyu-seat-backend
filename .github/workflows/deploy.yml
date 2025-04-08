@@ -51,8 +51,11 @@ jobs:
       - name: Gradle 실행 권한 부여
         run: chmod +x ./gradlew
 
-      - name:  Gradle 빌드
-        run: ./gradlew build
+      - name: Gradle 빌드
+        run: |
+          echo "✅ Gradle 빌드 시작"
+          ./gradlew build
+          echo "✅ Gradle 빌드 완료"
 
       - name:  EC2 SSH Key 설정
         uses: webfactory/ssh-agent@v0.7.0
@@ -61,15 +64,27 @@ jobs:
 
       - name:  EC2에 JAR, Dockerfile 전송
         run: |
+          echo "📦 JAR 파일 전송 시작"
           scp -o StrictHostKeyChecking=no ./build/libs/*.jar ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/app.jar
+          echo "✅ JAR 전송 완료"
+          echo "📄 Dockerfile 전송 시작"
           scp -o StrictHostKeyChecking=no ./Dockerfile ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/Dockerfile
+          echo "✅ Dockerfile 전송 완료"
 
       - name:  EC2에서 Docker 빌드 및 실행
         run: |
+          echo "🚀 EC2에서 Docker 빌드 및 실행 시작"
           ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            echo "🧹 기존 컨테이너 중지 및 삭제"
             sudo docker stop yeoyu-container || true
             sudo docker rm yeoyu-container || true
+
+            echo "🔨 Docker 이미지 빌드 시작"
             sudo docker build -t yeoyu-backend -f Dockerfile .
+            echo "✅ Docker 이미지 빌드 완료"
+
+            echo "🚀 Docker 컨테이너 실행"
             sudo docker run -d -p 8080:8080 --name yeoyu-container yeoyu-backend
+            echo "✅ Docker 컨테이너 실행 완료"
           EOF
 
