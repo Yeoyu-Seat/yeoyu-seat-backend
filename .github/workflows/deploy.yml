@@ -65,6 +65,11 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.EC2_KEY }}
 
+      - name: EC2 app.jar 디렉토리 삭제
+        run: |
+          echo "🧹 EC2의 app.jar 디렉토리 삭제"
+          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "rm -rf ~/app.jar"
+
       - name: EC2에 JAR, Dockerfile 전송
         run: |
           echo "📦 JAR 파일 전송 시작"
