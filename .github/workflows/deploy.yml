@@ -51,9 +51,10 @@ jobs:
       - name: Gradle 실행 권한 부여
         run: chmod +x ./gradlew
 
-      - name: Gradle 빌드
+      - name: Gradle 클린 및 빌드
         run: |
           echo "✅ Gradle 빌드 시작"
+          ./gradlew clean
           ./gradlew build
           echo "✅ Gradle 빌드 완료"
 
@@ -80,7 +81,7 @@ jobs:
             sudo docker rm yeoyu-container || true
 
             echo "🔨 Docker 이미지 빌드 시작"
-            sudo docker build -t yeoyu-backend -f Dockerfile .
+            sudo docker build --no-cache -t yeoyu-backend -f Dockerfile .
             echo "✅ Docker 이미지 빌드 완료"
 
             echo "🚀 Docker 컨테이너 실행"
