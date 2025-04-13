@@ -1,37 +1,3 @@
-# .github/workflows/deploy.yml
-# 기존 코드. GitHub Actions가 Deploy되었지만 EC2에서 .git 파일이 없어 pull을 못받아 최신 코드를 반영하지 못하는 상황. 아래와 같이 수정
-# name: Deploy to EC2
-
-# on:
-#   push:
-#     branches: [ main ]  # 또는 나의 메인 브랜치 이름
-
-# jobs:
-#   deploy:
-#     runs-on: ubuntu-latest
-
-#     steps:
-#     - name: Checkout repository
-#       uses: actions/checkout@v3
-
-#     - name: Set up SSH key
-#       run: |
-#         mkdir -p ~/.ssh
-#         echo "${{ secrets.EC2_KEY }}" > ~/.ssh/id_rsa
-#         chmod 600 ~/.ssh/id_rsa
-#         ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
-
-#     - name: Deploy to EC2
-#       run: |
-#         ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
-#           cd ~/  # 또는 Dockerfile이 있는 디렉토리
-#           git pull origin main  # EC2 서버에 코드가 clone 되어 있어야 함
-#           sudo docker stop yeoyu-container || true
-#           sudo docker rm yeoyu-container || true
-#           sudo docker build -t yeoyu-backend .
-#           sudo docker run -d -p 8080:8080 --name yeoyu-container yeoyu-backend
-#         EOF
-
 name: Deploy to EC2
 
 on:
@@ -82,17 +48,25 @@ jobs:
       - name: EC2에서 Docker 빌드 및 실행
         run: |
           echo "🖥️ EC2에서 Docker 빌드 및 실행 시작"
-          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
             echo "🧹 기존 컨테이너 종료 및 삭제"
             sudo docker stop yeoyu-container || true
             sudo docker rm yeoyu-container || true
 
             echo "🐳 Docker 이미지 빌드 시작"
-            sudo docker build -t yeoyu-backend -f Dockerfile .
+            sudo docker build -t yeoyu-backend --build-arg ACTIVE_PROFILE=prod -f Dockerfile .
             echo "🐳 Docker 이미지 빌드 완료"
 
             echo "🚀 Docker 컨테이너 실행"
-            sudo docker run -d -p 8080:8080 --name yeoyu-container yeoyu-backend
+            sudo docker run -d -p 8080:8080 --name yeoyu-container \
+              -e DB_HOST=${{ secrets.RDS_HOST }} \
+              -e DB_PORT=${{ secrets.RDS_PORT }} \
+              -e DB_NAME=${{ secrets.RDS_DB_NAME }} \
+              -e DB_USER=${{ secrets.RDS_USERNAME }} \
+              -e DB_PASSWORD=${{ secrets.RDS_PASSWORD }} \
+              -e SPRING_PROFILES_ACTIVE=prod \
+              yeoyu-backend
             echo "🚀 Docker 컨테이너 실행 완료"
           EOF
+
 
