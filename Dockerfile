@@ -14,6 +14,10 @@
 
 FROM openjdk:17-jdk-slim
 
+# 환경변수 전달용 (실제 환경에서는 GitHub Actions 또는 EC2 환경변수로 주입)
+ARG ACTIVE_PROFILE=prod
+ENV SPRING_PROFILES_ACTIVE=${ACTIVE_PROFILE}
+
 # JAR 파일 복사 (EC2에 이미 app.jar라는 이름으로 있음)
 COPY app.jar app.jar
 
